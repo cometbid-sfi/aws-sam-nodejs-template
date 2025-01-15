@@ -16,6 +16,7 @@ const config = {
     debug: process.env.APP_DEBUG === 'true',
     port: parseInt(process.env.PORT || '3000'),
     app_timezone: APP_TIMEZONE,
+    includeApiMetadata: true,
 
     getDatabaseConfig: () => ({
         db_host: DB_HOST,

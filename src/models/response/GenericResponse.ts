@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { ApiResponse, AppResponse, AppResponseImpl } from './AppResponse';
 import { ResponseCode, ResponseData } from './ResponseCode';
+import config from '../../config/config';
 
 /**
  * Generic response interface for API operations
@@ -13,14 +14,33 @@ export interface GenericResponse<T> {
     readonly appResponse: AppResponse<T>;
 }
 
+// Simplified and readonly metadata interface
+type AppMetadata = Readonly<{
+    apiVersion: string;
+    sendReport?: string;
+    moreInfo?: string;
+    apiDocUrl?: string;
+    technical?: string;
+}>;
+
 /**
  * Implementation of GenericResponse
  */
 export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U>> implements GenericResponse<T> {
+    // Memoized static metadata configuration
+    private static readonly DEFAULT_METADATA: AppMetadata = Object.freeze({
+        apiVersion: config.getAppMetadataConfig().apiVersion,
+        sendReport: config.getAppMetadataConfig().sendReport,
+        moreInfo: config.getAppMetadataConfig().moreInfo,
+        apiDocUrl: config.getAppMetadataConfig().apiDocUrl,
+        technical: config.getAppMetadataConfig().technical,
+    });
+
     readonly traceId: string;
     readonly timestamp: string;
     readonly path?: string;
     readonly code: ResponseCode;
+    readonly metadata: AppMetadata | null;
     readonly appResponse: AppResponse<T>;
 
     private constructor(params: {
@@ -32,6 +52,7 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
     }) {
         this.traceId = params.traceId ?? randomUUID();
         this.timestamp = params.timestamp ?? new Date().toISOString();
+        this.metadata = config.includeApiMetadata ? GenericResponseImpl.DEFAULT_METADATA : null;
         this.path = params.path;
         this.code = params.code;
         this.appResponse = params.appResponse;
@@ -46,7 +67,6 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
         detailMessage?: string;
         path?: string;
         code: ResponseCode;
-        includeMetadata: boolean;
         data?: E;
     }): GenericResponse<T> {
         const {
@@ -54,17 +74,10 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
             detailMessage = 'The operation completed successfully',
             path,
             code,
-            includeMetadata,
             data,
         } = params;
 
-        const appResponse = AppResponseImpl.createAppResponse<E>(
-            code,
-            message,
-            detailMessage,
-            includeMetadata,
-            data,
-        ) as AppResponse<T>;
+        const appResponse = AppResponseImpl.createAppResponse<E>(code, message, detailMessage, data) as AppResponse<T>;
 
         return new GenericResponseImpl<E, T>({
             path,
@@ -81,16 +94,14 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
         detailMessage?: string;
         path?: string;
         code: ResponseCode;
-        includeMetadata: boolean;
         errors?: E;
     }): GenericResponse<T> {
-        const { message, detailMessage = message, path, code, includeMetadata, errors } = params;
+        const { message, detailMessage = message, path, code, errors } = params;
 
         const appResponse = AppResponseImpl.createAppResponse<E>(
             code,
             message,
             detailMessage,
-            includeMetadata,
             errors,
         ) as AppResponse<T>;
 
