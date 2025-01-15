@@ -1,4 +1,3 @@
-import config from '../../config/config';
 import { ApiError } from './error/ApiError';
 import { ResponseData, RequestMethod, ResponseCode } from './ResponseCode';
 import { ApiMessage } from './success/ApiMessage';
@@ -22,14 +21,12 @@ export interface ApiResponse<E> {
 export interface AppResponse<T> {
     readonly success: boolean;
     readonly status: ResponseStatus;
-    // readonly metadata?: AppMetadata | null;
     readonly apiResponse: T;
 }
 
 // Simplified params interface
 interface AppResponseParams<T> {
     readonly response: T;
-    //readonly includeMetadata: boolean;
 }
 
 /**
