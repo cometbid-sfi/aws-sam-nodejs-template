@@ -1,10 +1,21 @@
 import config from '../../config/config';
-import { ApiResponse } from './GenericResponse';
+import { ApiError } from './error/ApiError';
+import { ResponseData, RequestMethod, ResponseCode } from './ResponseCode';
+import { ApiMessage } from './success/ApiMessage';
 
 // Use a const enum for status types to improve performance
 const enum ResponseStatus {
     SUCCESS = 'SUCCESS',
     ERROR = 'ERROR',
+}
+
+export interface ApiResponse<E> {
+    statusCode?: number;
+    path?: string;
+    requestMethod?: RequestMethod;
+    message: string;
+    detailMessage: string;
+    data?: E;
 }
 
 // Simplified and readonly metadata interface
@@ -17,23 +28,23 @@ type AppMetadata = Readonly<{
 }>;
 
 // Simplified response interface with discriminated union
-interface AppResponse {
+export interface AppResponse<T> {
     readonly success: boolean;
     readonly status: ResponseStatus;
     readonly metadata?: AppMetadata | null;
-    readonly response: ApiResponse;
+    readonly apiResponse: T;
 }
 
 // Simplified params interface
-interface AppResponseParams {
-    readonly response: ApiResponse;
-    readonly includeMetadata?: boolean;
+interface AppResponseParams<T> {
+    readonly response: T;
+    readonly includeMetadata: boolean;
 }
 
 /**
  * AppResponse Implementation
  */
-class AppResponseImpl implements AppResponse {
+export class AppResponseImpl<U extends ResponseData, T extends ApiResponse<U>> implements AppResponse<T> {
     // Memoized static metadata configuration
     private static readonly DEFAULT_METADATA: AppMetadata = Object.freeze({
         apiVersion: config.getAppMetadataConfig().apiVersion,
@@ -46,105 +57,103 @@ class AppResponseImpl implements AppResponse {
     readonly success: boolean;
     readonly status: ResponseStatus;
     readonly metadata: AppMetadata | null;
-    readonly response: ApiResponse;
+    readonly apiResponse: T;
 
-    constructor(
-        success: boolean,
-        status: ResponseStatus,
-        response: ApiResponse,
-        includeMetadata: boolean | undefined = true,
-    ) {
+    constructor(success: boolean, status: ResponseStatus, apiResponse: T, includeMetadata: boolean) {
         this.success = success;
         this.status = status;
-        this.response = response;
+        this.apiResponse = apiResponse;
         this.metadata = includeMetadata ? AppResponseImpl.DEFAULT_METADATA : null;
         Object.freeze(this); // Make instance immutable
     }
 
     // Static factory methods with improved type safety
-    static success({ response, includeMetadata }: AppResponseParams): AppResponse {
+    static success<U extends ResponseData, T extends ApiResponse<U>>({
+        response,
+        includeMetadata,
+    }: AppResponseParams<T>): AppResponse<T> {
         return new AppResponseImpl(true, ResponseStatus.SUCCESS, response, includeMetadata);
     }
 
-    static error({ response, includeMetadata }: AppResponseParams): AppResponse {
+    static error<U extends ResponseData, T extends ApiResponse<U>>({
+        response,
+        includeMetadata,
+    }: AppResponseParams<T>): AppResponse<T> {
         return new AppResponseImpl(false, ResponseStatus.ERROR, response, includeMetadata);
     }
 
-    // Optional builder pattern if needed for more complex scenarios
-    static builder(): AppResponseBuilder {
-        return new AppResponseBuilder();
-    }
-}
-
-// Optimized builder with better type safety
-class AppResponseBuilder {
-    private success!: boolean;
-    private status: ResponseStatus = ResponseStatus.ERROR;
-    private response?: ApiResponse;
-
-    setSuccess(success: boolean): this {
-        this.success = success;
-        return this;
-    }
-
-    setStatus(status: ResponseStatus): this {
-        this.status = status;
-        return this;
-    }
-
-    setResponse(response: ApiResponse): this {
-        this.response = response;
-        return this;
-    }
-
-    build(includeMetadata: boolean | undefined = true): AppResponse {
-        if (!this.response) {
-            throw new Error('Response is required');
+    /**
+     *
+     * @param code
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static createAppResponse<U extends ResponseData>(
+        code: ResponseCode,
+        message: string,
+        detailMessage: string,
+        includeMetadata: boolean,
+        data?: U,
+    ): AppResponse<ApiMessage<U>> {
+        switch (code) {
+            case ResponseCode.RESOURCE_READ_SUCCESS_CODE:
+                const readResponse = ApiMessage.read<U>(message, detailMessage, data);
+                return AppResponseImpl.success<U, ApiMessage<U>>({
+                    response: readResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.RESOURCE_CREATED_CODE:
+                const createdResponse = ApiMessage.created<U>(message, detailMessage, data);
+                return AppResponseImpl.success<U, ApiMessage<U>>({
+                    response: createdResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.RESOURCE_UPDATED_CODE:
+                const updatedResponse = ApiMessage.updated<U>(message, detailMessage, data);
+                return AppResponseImpl.success<U, ApiMessage<U>>({
+                    response: updatedResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.RESOURCE_DELETED_CODE:
+                const deletedResponse = ApiMessage.updated<U>(message, detailMessage, data);
+                return AppResponseImpl.success<U, ApiMessage<U>>({
+                    response: deletedResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.BAD_REQUEST_ERR_CODE:
+                const badReqResponse = ApiError.badRequest<U>(message, detailMessage, data);
+                // Error response
+                return AppResponseImpl.error<U, ApiMessage<U>>({
+                    response: badReqResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.EMP_NOT_FOUND_ERR_CODE:
+            case ResponseCode.USER_NOT_FOUND_ERR_CODE:
+            case ResponseCode.ACCOUNT_NOT_FOUND_ERR_CODE:
+                const notfoundResponse = ApiError.notFound<U>(message, detailMessage, data);
+                // Error response
+                return AppResponseImpl.error<U, ApiMessage<U>>({
+                    response: notfoundResponse,
+                    includeMetadata: includeMetadata,
+                });
+            case ResponseCode.APP_SERVER_ERR_CODE:
+            case ResponseCode.INTERNAL_SERVER_ERR_CODE:
+            case ResponseCode.UNAVAILABLE_SERVICE_ERR_CODE:
+                const internalServerErrorResponse = ApiError.internalServerError<U>(message, detailMessage);
+                // Error response
+                return AppResponseImpl.error<U, ApiMessage<U>>({
+                    response: internalServerErrorResponse,
+                    includeMetadata: includeMetadata,
+                });
+            default:
+                const serverErrorResponse = ApiError.internalServerError<U>(message, detailMessage);
+                // Error response
+                return AppResponseImpl.error<U, ApiMessage<U>>({
+                    response: serverErrorResponse,
+                    includeMetadata: includeMetadata,
+                });
         }
-
-        return new AppResponseImpl(this.success, this.status, this.response, includeMetadata);
     }
 }
-
-//===========================================================
-const apiResponse = {
-    message: 'An error occurred',
-    code: 'ERROR_CODE',
-    statusCode: 500,
-    detailMessage: 'Error details',
-    status: ResponseStatus.ERROR,
-    requestMethod: 'GET',
-    requestId: 'XXXXXXXXXX',
-    timestamp: new Date().toISOString(),
-};
-
-// Success response
-const successResponse = AppResponseImpl.success({
-    response: apiResponse,
-    includeMetadata: true,
-});
-
-const errorApiResponse = {
-    message: 'An error occurred',
-    code: 'ERROR_CODE',
-    statusCode: 500,
-    detailMessage: 'Error details',
-    status: ResponseStatus.ERROR,
-    requestMethod: 'GET',
-    requestId: 'XXXXXXXXXX',
-    timestamp: new Date().toISOString(),
-};
-
-// Error response
-const errorResponse = AppResponseImpl.error({
-    response: errorApiResponse,
-    includeMetadata: false,
-});
-
-// Using builder for complex scenarios
-const customResponse = AppResponseImpl.builder()
-    .setSuccess(true)
-    .setStatus(ResponseStatus.SUCCESS)
-    .setResponse(apiResponse)
-    .build(true);
-//============================================================

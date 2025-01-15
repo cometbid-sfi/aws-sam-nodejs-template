@@ -1,119 +1,186 @@
-import { ApiResponse } from '../GenericResponse';
+import { ApiResponse } from '../AppResponse';
+import { DEFAULT_DETAILS, DEFAULT_MESSAGES, ResponseData, REQUEST_METHODS, RequestMethod } from '../ResponseCode';
 
-class ApiError implements ApiResponse {
-    status: number;
-    message: string;
+// Interface for ApiError constructor
+interface ApiErrorParams<E> {
+    statusCode?: number;
     path?: string;
-    timestamp: string;
-    traceId?: string;
-    requestMethod: string;
-
-    constructor() {
-        this.status = 500;
-        this.message = '';
-        this.requestMethod = '';
-        this.timestamp = new Date().toISOString();
-    }
-
-    // Static factory methods
-    static builder(): ApiErrorBuilder {
-        return new ApiErrorBuilder();
-    }
-
-    static badRequest(message: string): ApiResponse {
-        return ApiError.builder().status(400).message(message).build();
-    }
-
-    static unauthorized(message: string | undefined = 'Unauthorized'): ApiResponse {
-        return ApiError.builder().status(401).message(message).build();
-    }
-
-    static forbidden(message: string | undefined = 'Forbidden'): ApiResponse {
-        return ApiError.builder().status(403).message(message).build();
-    }
-
-    static notFound(message: string | undefined = 'Resource not found'): ApiResponse {
-        return ApiError.builder().status(404).message(message).build();
-    }
-
-    static methodNotAllowed(message: string | undefined = 'Method not allowed'): ApiResponse {
-        return ApiError.builder().status(405).message(message).build();
-    }
-
-    static conflict(message: string | undefined = 'Conflict'): ApiResponse {
-        return ApiError.builder().status(409).message(message).build();
-    }
-
-    static internalServer(message: string | undefined = 'Internal server error'): ApiResponse {
-        return ApiError.builder().status(500).message(message).build();
-    }
-
-    static serviceUnavailable(message: string | undefined = 'Service unavailable'): ApiResponse {
-        return ApiError.builder().status(503).message(message).build();
-    }
-
-    static error(message: string): ApiResponse {
-        return ApiError.builder().status(500).message(message).build();
-    }
-
-    toJSON(): ApiResponse {
-        return {
-            status: this.status,
-            message: this.message,
-            path: this.path,
-            timestamp: this.timestamp,
-            traceId: this.traceId,
-        } as ApiResponse;
-    }
-
-    // Builder-style methods for optional fields
-    withPath(path: string): ApiError {
-        this.path = path;
-        return this;
-    }
-
-    withTraceId(traceId: string): ApiError {
-        this.traceId = traceId;
-        return this;
-    }
+    requestMethod?: RequestMethod;
+    message?: string;
+    detailMessage?: string;
+    data?: E;
 }
 
-class ApiErrorBuilder {
-    private apiError: ApiError;
+export class ApiError<E extends ResponseData> implements ApiResponse<E> {
+    readonly statusCode: number;
+    readonly path?: string;
+    readonly message: string;
+    readonly detailMessage: string;
+    readonly errors?: E;
 
-    constructor() {
-        this.apiError = new ApiError();
+    constructor(params: ApiErrorParams<E> = {}) {
+        this.statusCode = params.statusCode ?? 200;
+        this.message = params.message ?? '';
+        this.detailMessage = params.detailMessage ?? '';
+        this.path = params.path;
+        this.errors = params.data;
+        Object.freeze(this);
     }
 
-    status(status: number): ApiErrorBuilder {
-        this.apiError.status = status;
-        return this;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @returns
+     */
+    static readError<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.SERVER_ERROR,
+        detailMessage: string = DEFAULT_DETAILS.SERVER_ERROR,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 500,
+            message,
+            detailMessage,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 
-    message(message: string): ApiErrorBuilder {
-        this.apiError.message = message;
-        return this;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static badRequest<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.BAD_REQUEST,
+        detailMessage: string = DEFAULT_DETAILS.BAD_REQUEST,
+        data?: E,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 400,
+            message,
+            detailMessage,
+            data,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 
-    withPath(path: string): ApiErrorBuilder {
-        this.apiError.path = path;
-        return this;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static notFound<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.NOT_FOUND,
+        detailMessage: string = DEFAULT_DETAILS.NOT_FOUND,
+        data?: E,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 404,
+            message,
+            detailMessage,
+            data,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 
-    withTraceId(traceId: string): ApiErrorBuilder {
-        this.apiError.traceId = traceId;
-        return this;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static conflict<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.CONFLICT,
+        detailMessage: string = DEFAULT_DETAILS.CONFLICT,
+        data?: E,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 409,
+            message,
+            detailMessage,
+            data,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 
-    withTimestamp(timestamp: string): ApiErrorBuilder {
-        this.apiError.timestamp = timestamp;
-        return this;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static unauthorized<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.UNAUTHORIZED,
+        detailMessage: string = DEFAULT_DETAILS.UNAUTHORIZED,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 401,
+            message,
+            detailMessage,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 
-    build(): ApiResponse {
-        if (!this.message) {
-            throw new Error('Message is required');
-        }
-        return { ...this.apiError } as ApiResponse;
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static forbidden<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.FORBIDDEN,
+        detailMessage: string = DEFAULT_DETAILS.FORBIDDEN,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 403,
+            message,
+            detailMessage,
+            requestMethod: REQUEST_METHODS.GET,
+        });
+    }
+
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static serverError<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.SERVER_ERROR,
+        detailMessage: string = DEFAULT_DETAILS.SERVER_ERROR,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 500,
+            message,
+            detailMessage,
+            requestMethod: REQUEST_METHODS.GET,
+        });
+    }
+
+    /**
+     *
+     * @param message
+     * @param detailMessage
+     * @param data
+     * @returns
+     */
+    static internalServerError<E extends ResponseData>(
+        message: string = DEFAULT_MESSAGES.SERVICE_UNAVAILABLE,
+        detailMessage: string = DEFAULT_DETAILS.SERVICE_UNAVAILABLE,
+    ): ApiError<E> {
+        return new ApiError({
+            statusCode: 503,
+            message,
+            detailMessage,
+            requestMethod: REQUEST_METHODS.GET,
+        });
     }
 }
