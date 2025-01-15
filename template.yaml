@@ -1,38 +1,30 @@
----
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   cometbid-sfi-app
-
   Sample SAM Template for cometbid-sfi-app
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 3
-
     Tracing: Active
-    # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
   Api:
     TracingEnabled: true
+
 Resources:
   HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
       Handler: app.lambdaHandler
       Runtime: nodejs20.x
       Architectures:
         - x86_64
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello
-            Method: get
-    Metadata: # Manage esbuild properties
+      Policies:
+        - AWSLambdaBasicExecutionRole
+    Metadata:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
@@ -41,6 +33,20 @@ Resources:
         EntryPoints:
           - app.ts
 
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionUri: s3://trial-task-dev/open-api.yaml
+      StageName: Prod
+
+  HelloWorldFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HelloWorldFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/*/*
+
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
@@ -48,19 +54,18 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
+
   ApplicationInsightsMonitoring:
     Type: AWS::ApplicationInsights::Application
     Properties:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: "true"
+
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   HelloWorldFunction:
     Description: Hello World Lambda Function ARN
     Value: !GetAtt HelloWorldFunction.Arn

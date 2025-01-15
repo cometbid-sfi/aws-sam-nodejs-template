@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Hello World API
+  version: 1.0.0
+paths:
+  /hello:
+    get:
+      summary: Returns a greeting
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: 
+          'Fn::Join':
+            - ''
+            - - 'arn:aws:apigateway:'
+              - Ref: 'AWS::Region'
+              - ':lambda:path/2015-03-31/functions/'
+              - 'Fn::GetAtt': ['HelloWorldFunction', 'Arn']
+              - '/invocations'
+        passthroughBehavior: when_no_match
