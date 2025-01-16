@@ -19,12 +19,5 @@ paths:
       x-amazon-apigateway-integration:
         type: aws_proxy
         httpMethod: POST
-        uri: 
-          'Fn::Join':
-            - ''
-            - - 'arn:aws:apigateway:'
-              - Ref: 'AWS::Region'
-              - ':lambda:path/2015-03-31/functions/'
-              - 'Fn::GetAtt': ['HelloWorldFunction', 'Arn']
-              - '/invocations'
+        uri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations
         passthroughBehavior: when_no_match
