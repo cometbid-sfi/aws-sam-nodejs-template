@@ -203,17 +203,13 @@ export const REQUEST_METHODS: Readonly<Record<string, RequestMethod>> = {
     PATCH: 'PATCH',
 } as const;
 
-export interface Entity {
-    id: number;
-    name: string;
-}
-
 /**
  * Default response messages
  */
 export const DEFAULT_MESSAGES = Object.freeze({
     // Success messages
-    SUCCESS: 'Operation completed successfully',
+    SUCCESS: 'Operation successful',
+    READ: 'Read operation completed successfully',
     CREATED: 'Resource created successfully',
     UPDATED: 'Resource updated successfully',
     DELETED: 'Resource deleted successfully',
@@ -280,7 +276,8 @@ export const DEFAULT_MESSAGES = Object.freeze({
  */
 export const DEFAULT_DETAILS = Object.freeze({
     // Success details
-    SUCCESS: 'The requested operation was completed successfully',
+    SUCCESS: 'The operation completed successfully',
+    READ: 'The requested read operation was completed successfully',
     CREATED: 'The requested resource was created successfully',
     UPDATED: 'The requested resource was updated successfully',
     DELETED: 'The requested resource was deleted successfully',
@@ -382,11 +379,14 @@ export function createMessagePair(
     };
 }
 
-export type ErrorDetail = {
+export interface Entity {
+    id: number;
+    type: string;
+}
+
+export interface ErrorDetail {
     field: string;
     message: string;
-};
+}
 
-export type ResponseData = {
-    data: ErrorDetail[] | Entity;
-};
+export type ResponseData = ErrorDetail[] | Entity;

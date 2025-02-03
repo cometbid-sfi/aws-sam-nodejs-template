@@ -41,7 +41,9 @@ const failedDependencyResponse = GenericResponseBuilder.failedDependency<UserRes
 const preconditionRequiredResponse = GenericResponseBuilder.preconditionRequired<UserResponse>('Precondition required');
 const preconditionFailedResponse = GenericResponseBuilder.preconditionFailed<UserResponse>('Precondition failed');
 */
-
+/*
+import { ApiResponse } from '../models/response/AppResponse';
+import { GenericResponse } from '../models/response/GenericResponse';
 
 // Example usage in an API context
 class UserController {
@@ -66,3 +68,4 @@ class UserController {
         }
     }
 }
+*/

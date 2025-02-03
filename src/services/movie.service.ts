@@ -136,5 +136,4 @@ class MovieService {
 }
 
 const MovieServiceInstance = new MovieService();
-
 export default MovieServiceInstance;

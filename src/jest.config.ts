@@ -8,6 +8,9 @@ export default {
     transform: {
         '^.+\\.ts?$': 'ts-jest',
     },
+    // Use ts-jest preset for testing TypeScript files with Jest
+    preset: 'ts-jest',
+
     clearMocks: true,
     // Set the code coverage directory
     coverageDirectory: 'coverage',
@@ -33,6 +36,7 @@ export default {
             functions: 100,
         },
     },
+
     // Set the code coverage provider to v8
     coverageProvider: 'v8',
 
@@ -63,7 +67,7 @@ export default {
     // Enable verbose output for debugging
     verbose: true,
 
-    testMatch: ['**/tests/unit/*.test.ts'],
+    //testMatch: ['**/tests/unit/*.test.ts'],
 
     // Define the root directory for tests and modules
     roots: ['<rootDir>/tests'],
@@ -71,7 +75,7 @@ export default {
     // testMatch: ["**/*.test.ts", "**/*.test.js"],
 
     //Regular expression to find test files
-    //testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
+    testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
 
     // File extensions to recognise in module resolution
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

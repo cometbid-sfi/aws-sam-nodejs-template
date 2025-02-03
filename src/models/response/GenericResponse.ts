@@ -1,7 +1,8 @@
-import { randomUUID } from 'crypto';
-import { ApiResponse, AppResponse, AppResponseImpl } from './AppResponse';
-import { ResponseCode, ResponseData } from './ResponseCode';
+import { AppResponse, AppResponseImpl } from './AppResponse';
+import { REQUEST_METHODS, RequestMethod, ResponseCode, ResponseData } from './ResponseCode';
 import config from '../../config/config';
+import { ApiParams } from './ApiParams';
+import { randomUUID } from '../../util/random-util';
 
 /**
  * Generic response interface for API operations
@@ -26,7 +27,7 @@ type AppMetadata = Readonly<{
 /**
  * Implementation of GenericResponse
  */
-export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U>> implements GenericResponse<T> {
+export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>> implements GenericResponse<T> {
     // Memoized static metadata configuration
     private static readonly DEFAULT_METADATA: AppMetadata = Object.freeze({
         apiVersion: config.getAppMetadataConfig().apiVersion,
@@ -38,7 +39,7 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
 
     readonly traceId: string;
     readonly timestamp: string;
-    readonly path?: string;
+    readonly path: string;
     readonly code: ResponseCode;
     readonly metadata: AppMetadata | null;
     readonly appResponse: AppResponse<T>;
@@ -46,7 +47,7 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
     private constructor(params: {
         traceId?: string;
         timestamp?: string;
-        path?: string;
+        path: string;
         code: ResponseCode;
         appResponse: AppResponse<T>;
     }) {
@@ -62,22 +63,23 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
     /**
      * Creates a success response
      */
-    static success<E extends ResponseData, T extends ApiResponse<E>>(params: {
-        message: string;
+    static success<E extends ResponseData, T extends ApiParams<E>>(params: {
+        message?: string;
         detailMessage?: string;
-        path?: string;
+        requestMethod?: RequestMethod;
+        path: string;
         code: ResponseCode;
         data?: E;
     }): GenericResponse<T> {
-        const {
-            message = 'Operation successful',
-            detailMessage = 'The operation completed successfully',
-            path,
-            code,
-            data,
-        } = params;
+        const { message, detailMessage, requestMethod, path, code, data } = params;
 
-        const appResponse = AppResponseImpl.createAppResponse<E>(code, message, detailMessage, data) as AppResponse<T>;
+        const appResponse = AppResponseImpl.createAppResponse<E, T>(
+            requestMethod,
+            code,
+            message,
+            detailMessage,
+            data,
+        ) as AppResponse<T>;
 
         return new GenericResponseImpl<E, T>({
             path,
@@ -89,16 +91,18 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
     /**
      * Creates an error response
      */
-    static error<E extends ResponseData, T extends ApiResponse<E>>(params: {
-        message: string;
+    static error<E extends ResponseData, T extends ApiParams<E>>(params: {
+        message?: string;
         detailMessage?: string;
-        path?: string;
+        requestMethod?: RequestMethod;
+        path: string;
         code: ResponseCode;
         errors?: E;
     }): GenericResponse<T> {
-        const { message, detailMessage = message, path, code, errors } = params;
+        const { message, detailMessage, requestMethod, path, code, errors } = params;
 
-        const appResponse = AppResponseImpl.createAppResponse<E>(
+        const appResponse = AppResponseImpl.createAppResponse<E, T>(
+            requestMethod,
             code,
             message,
             detailMessage,
@@ -114,8 +118,8 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
     /**
      * Creates a response from existing AppResponse
      */
-    static fromAppResponse<T extends ApiResponse<ResponseData>>(params: {
-        path?: string;
+    static fromAppResponse<T extends ApiParams<ResponseData>>(params: {
+        path: string;
         code: ResponseCode;
         appResponse: AppResponse<T>;
     }): GenericResponse<T> {
@@ -140,14 +144,35 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
      * Gets the response message
      */
     getMessage(): string {
-        return this.appResponse.apiResponse.message;
+        return this.appResponse.apiResponse.message ?? 'message not specified';
+    }
+
+    /**
+     * Gets the response message
+     */
+    getRequestMethod(): RequestMethod {
+        return this.appResponse.apiResponse.requestMethod ?? REQUEST_METHODS.GET;
+    }
+
+    /**
+     * Gets the response message
+     */
+    getStatus(): string {
+        return this.appResponse.status;
+    }
+
+    /**
+     * Gets the response message
+     */
+    isSuccess(): boolean {
+        return this.appResponse.success;
     }
 
     /**
      * Gets the detailed message
      */
     getDetailMessage(): string {
-        return this.appResponse.apiResponse.detailMessage;
+        return this.appResponse.apiResponse.detailMessage ?? 'detailed message not specified';
     }
 
     /**
@@ -175,12 +200,19 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiResponse<U
      */
     toJSON(): Record<string, unknown> {
         return {
+            metadata: this.metadata,
             traceId: this.traceId,
             timestamp: this.timestamp,
+            success: this.isSuccess(),
+            status: this.getStatus(),
+            requestMethod: this.getRequestMethod(),
             path: this.path,
             code: this.code,
-            httpStatus: this.getHttpStatusCode(),
-            appResponse: this.appResponse,
+            statusCode: this.getHttpStatusCode(),
+            message: this.getMessage(),
+            detailMessage: this.getDetailMessage(),
+            data: this.getData(),
+            //appResponse: this.appResponse,
         };
     }
 }
