@@ -1,4 +1,3 @@
-import { ApiError } from '../../models/response/ApiError';
 import { AppResponseImpl } from '../../models/response/AppResponse';
 import {
     DEFAULT_DETAILS,
@@ -125,7 +124,7 @@ describe('AppResponseImpl', () => {
 
         describe('Error cases', () => {
             it('should create a bad request error response', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.GET,
                         message: 'Bad Request',
@@ -141,7 +140,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 
@@ -152,7 +151,7 @@ describe('AppResponseImpl', () => {
             });
 
             it('should create an unauthorized error response', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.GET,
                         message: 'Unauthorized',
@@ -168,7 +167,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 
@@ -179,7 +178,7 @@ describe('AppResponseImpl', () => {
             });
 
             it('should create a not found error response', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.GET,
                         message: 'Not Found',
@@ -195,7 +194,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 
@@ -206,7 +205,7 @@ describe('AppResponseImpl', () => {
             });
 
             it('should create a conflict error response', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.POST,
                         message: 'Resource already exist',
@@ -222,7 +221,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 
@@ -233,7 +232,7 @@ describe('AppResponseImpl', () => {
             });
 
             it('should create an internal server error response', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.GET,
                         message: 'Internal Server Error',
@@ -249,7 +248,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 
@@ -260,7 +259,7 @@ describe('AppResponseImpl', () => {
             });
 
             it('should create a default error response for unknown error codes', () => {
-                const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
+                const response = AppResponseImpl.createAppResponse<ErrorDetail[]>(
                     {
                         requestMethod: REQUEST_METHODS.GET,
                         message: 'Unknown Error',
@@ -276,7 +275,7 @@ describe('AppResponseImpl', () => {
 
                 expect(response.apiResponse.message).toBeDefined();
                 expect(response.apiResponse.detailMessage).toBeDefined();
-                expect(response.apiResponse.errors).toBeDefined();
+                expect(response.apiResponse.data).toBeDefined();
                 expect(response.apiResponse.requestMethod).toBeDefined();
                 expect(response.apiResponse.statusCode).toBeDefined();
 

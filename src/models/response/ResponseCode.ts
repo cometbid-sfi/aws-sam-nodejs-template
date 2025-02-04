@@ -192,6 +192,12 @@ export function isErrorCode(code: ResponseCode): boolean {
     return !isSuccessCode(code);
 }
 
+// Use a const enum for status types to improve performance
+export const enum ResponseStatus {
+    SUCCESS = 'SUCCESS',
+    ERROR = 'ERROR',
+}
+
 // ResponseCode.ts
 export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
