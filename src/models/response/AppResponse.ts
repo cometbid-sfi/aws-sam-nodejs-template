@@ -31,8 +31,6 @@ export class AppResponseImpl<U extends ResponseData> implements AppResponse<U> {
     }
 
     private static error<U extends ResponseData>(appResponse: ApiError<U>): AppResponse<U> {
-        console.log(`Response Data final Error spot: ${appResponse.errors}`);
-
         const params: ApiParams<U> = {
             statusCode: appResponse.statusCode,
             requestMethod: appResponse.requestMethod,
@@ -76,15 +74,6 @@ export class AppResponseImpl<U extends ResponseData> implements AppResponse<U> {
                 return AppResponseImpl.success<U>(deletedResponse) as AppResponse<U>;
             case ResponseCode.BAD_REQUEST_ERR_CODE:
                 const badReqResponse = ApiError.badRequest<U>(params);
-
-                console.log(`Response Data Inside BAD_REQUEST_ERR_CODE: ${badReqResponse.errors}`);
-                //console.log(`Bad Request detail Message: ${badReqResponse.detailMessage}`);
-                //console.log(`Bad Request Message: ${badReqResponse.message}`);
-                //console.log(`Bad Request detail errors: ${badReqResponse.errors}`);
-                //console.log(`Bad Request status code: ${badReqResponse.statusCode}`);
-
-                //const badReqResponse: ApiError<U> = response;
-                // badReqResponse.data = response.errors;
 
                 // Error response
                 return AppResponseImpl.error<U>(badReqResponse) as AppResponse<U>;

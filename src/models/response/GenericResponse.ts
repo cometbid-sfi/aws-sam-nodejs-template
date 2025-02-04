@@ -87,9 +87,6 @@ export class GenericResponseImpl<U extends ResponseData> implements GenericRespo
         const path = params.path;
         const code = params.code;
 
-        console.log(`Success details: ${appResponse.apiResponse.detailMessage}`);
-        console.log(`Success message: ${appResponse.apiResponse.message}`);
-
         return new GenericResponseImpl<E>({ path, code, appResponse });
     }
 
@@ -105,14 +102,7 @@ export class GenericResponseImpl<U extends ResponseData> implements GenericRespo
         errors?: E;
     }): GenericResponse<E> {
         const apiParams: ApiParams<E> = params;
-
         apiParams.data = params.errors;
-        console.log(`Response Data after: ${apiParams.data}`);
-
-        //const { message, detailMessage, requestMethod, path, code, errors }: ApiParams<E> = params;
-
-        //console.log(`Bad Request details: ${appResponse.apiResponse.detailMessage}`);
-        //console.log(`Bad Request message: ${appResponse.apiResponse.message}`);
 
         const appResponse = AppResponseImpl.createAppResponse<E>(apiParams, params.code) as AppResponse<E>;
         const path = params.path;
