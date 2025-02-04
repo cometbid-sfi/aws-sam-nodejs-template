@@ -10,7 +10,7 @@ import {
 
 describe('AppResponseImpl', () => {
     // Test data
-    const mockData = { id: 1, type: 'MOVIE' };
+    const mockData = { id: '1', type: 'MOVIE' };
 
     const errorDetails: ErrorDetail[] = [
         { field: 'field1', message: 'error message' },
@@ -21,11 +21,11 @@ describe('AppResponseImpl', () => {
         describe('Success cases', () => {
             it('should create a successful read response', () => {
                 const response = AppResponseImpl.createAppResponse(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        data: mockData,
+                    },
                     ResponseCode.RESOURCE_READ_SUCCESS_CODE,
-                    undefined,
-                    undefined,
-                    mockData,
                 );
 
                 expect(response.success).toBe(true);
@@ -47,11 +47,11 @@ describe('AppResponseImpl', () => {
 
             it('should create a successful create response', () => {
                 const response = AppResponseImpl.createAppResponse(
-                    REQUEST_METHODS.POST,
+                    {
+                        requestMethod: REQUEST_METHODS.POST,
+                        data: mockData,
+                    },
                     ResponseCode.RESOURCE_CREATED_CODE,
-                    undefined,
-                    undefined,
-                    mockData,
                 );
 
                 expect(response.success).toBe(true);
@@ -73,11 +73,11 @@ describe('AppResponseImpl', () => {
 
             it('should create a successful update response', () => {
                 const response = AppResponseImpl.createAppResponse(
-                    REQUEST_METHODS.PUT,
+                    {
+                        requestMethod: REQUEST_METHODS.PUT,
+                        data: mockData,
+                    },
                     ResponseCode.RESOURCE_UPDATED_CODE,
-                    undefined,
-                    undefined,
-                    mockData,
                 );
 
                 expect(response.success).toBe(true);
@@ -99,11 +99,11 @@ describe('AppResponseImpl', () => {
 
             it('should create a successful delete response', () => {
                 const response = AppResponseImpl.createAppResponse(
-                    REQUEST_METHODS.DELETE,
+                    {
+                        requestMethod: REQUEST_METHODS.DELETE,
+                        data: mockData,
+                    },
                     ResponseCode.RESOURCE_DELETED_CODE,
-                    undefined,
-                    undefined,
-                    mockData,
                 );
 
                 expect(response.success).toBe(true);
@@ -126,11 +126,13 @@ describe('AppResponseImpl', () => {
         describe('Error cases', () => {
             it('should create a bad request error response', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        message: 'Bad Request',
+                        detailMessage: 'Invalid input',
+                        data: errorDetails,
+                    },
                     ResponseCode.BAD_REQUEST_ERR_CODE,
-                    'Bad Request',
-                    'Invalid input',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -151,11 +153,13 @@ describe('AppResponseImpl', () => {
 
             it('should create an unauthorized error response', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        message: 'Unauthorized',
+                        detailMessage: 'Invalid credentials',
+                        data: errorDetails,
+                    },
                     ResponseCode.UNAUTHORIZED_ACCESS_ERR_CODE,
-                    'Unauthorized',
-                    'Invalid credentials',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -176,11 +180,13 @@ describe('AppResponseImpl', () => {
 
             it('should create a not found error response', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        message: 'Not Found',
+                        detailMessage: 'Resource not found',
+                        data: errorDetails,
+                    },
                     ResponseCode.USER_NOT_FOUND_ERR_CODE,
-                    'Not Found',
-                    'Resource not found',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -201,11 +207,13 @@ describe('AppResponseImpl', () => {
 
             it('should create a conflict error response', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.POST,
+                    {
+                        requestMethod: REQUEST_METHODS.POST,
+                        message: 'Resource already exist',
+                        detailMessage: 'It seems user with the username already exist.',
+                        data: errorDetails,
+                    },
                     ResponseCode.CONFLICT_ERR_CODE,
-                    'Resource already exist',
-                    'It seems user with the username already exist.',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -226,11 +234,13 @@ describe('AppResponseImpl', () => {
 
             it('should create an internal server error response', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        message: 'Internal Server Error',
+                        detailMessage: 'Something went wrong',
+                        data: errorDetails,
+                    },
                     ResponseCode.INTERNAL_SERVER_ERR_CODE,
-                    'Internal Server Error',
-                    'Something went wrong',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -251,11 +261,13 @@ describe('AppResponseImpl', () => {
 
             it('should create a default error response for unknown error codes', () => {
                 const response = AppResponseImpl.createAppResponse<ErrorDetail[], ApiError<ErrorDetail[]>>(
-                    REQUEST_METHODS.GET,
+                    {
+                        requestMethod: REQUEST_METHODS.GET,
+                        message: 'Unknown Error',
+                        detailMessage: 'Unknown error occurred',
+                        data: errorDetails,
+                    },
                     '999' as ResponseCode, // Unknown code
-                    'Unknown Error',
-                    'Unknown error occurred',
-                    errorDetails,
                 );
 
                 expect(response.success).toBe(false);
@@ -279,11 +291,11 @@ describe('AppResponseImpl', () => {
     describe('Immutability', () => {
         it('should create immutable response objects', () => {
             const response = AppResponseImpl.createAppResponse(
-                REQUEST_METHODS.GET,
+                {
+                    requestMethod: REQUEST_METHODS.GET,
+                    data: errorDetails,
+                },
                 ResponseCode.ACCOUNT_NOT_FOUND_ERR_CODE,
-                undefined,
-                undefined,
-                errorDetails,
             );
 
             expect(() => {

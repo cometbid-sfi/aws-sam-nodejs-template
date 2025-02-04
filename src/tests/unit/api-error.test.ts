@@ -39,7 +39,7 @@ describe('ApiError', () => {
 
     describe('static factory methods', () => {
         it('should create badRequest error', () => {
-            const error = ApiError.badRequest(REQUEST_METHODS.POST);
+            const error = ApiError.badRequest({ requestMethod: REQUEST_METHODS.POST });
 
             expect(error.statusCode).toBe(400);
             expect(error.message).toBe(DEFAULT_MESSAGES.BAD_REQUEST);
@@ -48,7 +48,7 @@ describe('ApiError', () => {
         });
 
         it('should create notFound error', () => {
-            const error = ApiError.notFound(REQUEST_METHODS.GET);
+            const error = ApiError.notFound({ requestMethod: REQUEST_METHODS.GET });
 
             expect(error.statusCode).toBe(404);
             expect(error.message).toBe(DEFAULT_MESSAGES.NOT_FOUND);
@@ -57,7 +57,7 @@ describe('ApiError', () => {
         });
 
         it('should create unauthorized error', () => {
-            const error = ApiError.unauthorized(REQUEST_METHODS.GET);
+            const error = ApiError.unauthorized({ requestMethod: REQUEST_METHODS.GET });
 
             expect(error.statusCode).toBe(401);
             expect(error.message).toBe(DEFAULT_MESSAGES.UNAUTHORIZED);
@@ -68,16 +68,20 @@ describe('ApiError', () => {
         it('should create forbidden error', () => {
             const customMessage = 'Custom forbidden message';
             const customDetail = 'Custom detail message';
-            const error = ApiError.forbidden(REQUEST_METHODS.GET, customMessage, customDetail);
+            const error = ApiError.forbidden({
+                requestMethod: REQUEST_METHODS.POST,
+                message: customMessage,
+                detailMessage: customDetail,
+            });
 
             expect(error.statusCode).toBe(403);
             expect(error.message).toBe(customMessage);
             expect(error.detailMessage).toBe(customDetail);
-            expect(error.requestMethod).toBe(REQUEST_METHODS.GET);
+            expect(error.requestMethod).toBe(REQUEST_METHODS.POST);
         });
 
         it('should create conflict error', () => {
-            const error = ApiError.conflict(REQUEST_METHODS.POST);
+            const error = ApiError.conflict({ requestMethod: REQUEST_METHODS.POST });
 
             expect(error.statusCode).toBe(409);
             expect(error.message).toBe(DEFAULT_MESSAGES.CONFLICT);
@@ -86,7 +90,7 @@ describe('ApiError', () => {
         });
 
         it('should create internalServerError', () => {
-            const error = ApiError.internalServerError(REQUEST_METHODS.GET);
+            const error = ApiError.internalServerError({ requestMethod: REQUEST_METHODS.GET });
 
             expect(error.statusCode).toBe(503);
             expect(error.message).toBe(DEFAULT_MESSAGES.SERVICE_UNAVAILABLE);

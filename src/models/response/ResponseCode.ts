@@ -380,7 +380,7 @@ export function createMessagePair(
 }
 
 export interface Entity {
-    id: number;
+    id: string;
     type: string;
 }
 

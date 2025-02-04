@@ -7,12 +7,22 @@ import { randomUUID } from '../../util/random-util';
 /**
  * Generic response interface for API operations
  */
-export interface GenericResponse<T> {
+export interface GenericResponse<U, T> {
     readonly traceId: string;
     readonly timestamp: string;
-    readonly path?: string;
+    readonly path: string;
     readonly code: ResponseCode;
+    readonly metadata: AppMetadata | null;
     readonly appResponse: AppResponse<T>;
+
+    getHttpStatusCode: () => number;
+    getRequestMethod: () => RequestMethod;
+    getDetailMessage: () => string;
+    getMessage: () => string;
+    getStatus: () => string;
+    getData: () => U | undefined;
+    isSuccess: () => boolean;
+    toJSON: () => Record<string, unknown>;
 }
 
 // Simplified and readonly metadata interface
@@ -27,7 +37,7 @@ type AppMetadata = Readonly<{
 /**
  * Implementation of GenericResponse
  */
-export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>> implements GenericResponse<T> {
+export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>> implements GenericResponse<U, T> {
     // Memoized static metadata configuration
     private static readonly DEFAULT_METADATA: AppMetadata = Object.freeze({
         apiVersion: config.getAppMetadataConfig().apiVersion,
@@ -70,22 +80,17 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>>
         path: string;
         code: ResponseCode;
         data?: E;
-    }): GenericResponse<T> {
-        const { message, detailMessage, requestMethod, path, code, data } = params;
+    }): GenericResponse<E, T> {
+        const apiParams: ApiParams<E> = params;
 
-        const appResponse = AppResponseImpl.createAppResponse<E, T>(
-            requestMethod,
-            code,
-            message,
-            detailMessage,
-            data,
-        ) as AppResponse<T>;
+        const appResponse = AppResponseImpl.createAppResponse<E, T>(apiParams, params.code) as AppResponse<T>;
+        const path = params.path;
+        const code = params.code;
 
-        return new GenericResponseImpl<E, T>({
-            path,
-            code,
-            appResponse,
-        });
+        console.log(`Success details: ${appResponse.apiResponse.detailMessage}`);
+        console.log(`Success message: ${appResponse.apiResponse.message}`);
+
+        return new GenericResponseImpl<E, T>({ path, code, appResponse });
     }
 
     /**
@@ -98,32 +103,19 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>>
         path: string;
         code: ResponseCode;
         errors?: E;
-    }): GenericResponse<T> {
-        const { message, detailMessage, requestMethod, path, code, errors } = params;
+    }): GenericResponse<E, T> {
+        const apiParams: ApiParams<E> = params;
+        apiParams.data = params.errors;
 
-        const appResponse = AppResponseImpl.createAppResponse<E, T>(
-            requestMethod,
-            code,
-            message,
-            detailMessage,
-            errors,
-        ) as AppResponse<T>;
+        //const { message, detailMessage, requestMethod, path, code, errors }: ApiParams<E> = params;
 
-        return new GenericResponseImpl<E, T>({
-            path,
-            code,
-            appResponse,
-        });
-    }
-    /**
-     * Creates a response from existing AppResponse
-     */
-    static fromAppResponse<T extends ApiParams<ResponseData>>(params: {
-        path: string;
-        code: ResponseCode;
-        appResponse: AppResponse<T>;
-    }): GenericResponse<T> {
-        return new GenericResponseImpl(params);
+        const appResponse = AppResponseImpl.createAppResponse<E, T>(apiParams, params.code) as AppResponse<T>;
+        const path = params.path;
+        const code = params.code;
+        //console.log(`Bad Request details: ${appResponse.apiResponse.detailMessage}`);
+        //console.log(`Bad Request message: ${appResponse.apiResponse.message}`);
+
+        return new GenericResponseImpl<E, T>({ path, code, appResponse });
     }
 
     /**
@@ -136,7 +128,7 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>>
     /**
      * Gets the response data if available
      */
-    getData(): T['data'] | undefined {
+    getData(): U | undefined {
         return this.appResponse.apiResponse.data;
     }
 
@@ -145,6 +137,13 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>>
      */
     getMessage(): string {
         return this.appResponse.apiResponse.message ?? 'message not specified';
+    }
+
+    /**
+     * Gets the detailed message
+     */
+    getDetailMessage(): string {
+        return this.appResponse.apiResponse.detailMessage ?? 'detailed message not specified';
     }
 
     /**
@@ -169,31 +168,28 @@ export class GenericResponseImpl<U extends ResponseData, T extends ApiParams<U>>
     }
 
     /**
-     * Gets the detailed message
-     */
-    getDetailMessage(): string {
-        return this.appResponse.apiResponse.detailMessage ?? 'detailed message not specified';
-    }
-
-    /**
      * Creates a copy with new path
      */
-    withPath(path: string): GenericResponse<T> {
+    /*
+    withPath(path: string): GenericResponse<U, T> {
         return new GenericResponseImpl({
             ...this,
             path,
         });
     }
+        */
 
     /**
      * Creates a copy with new code
      */
-    withCode(code: ResponseCode): GenericResponse<T> {
+    /*
+    withCode(code: ResponseCode): GenericResponse<U, T> {
         return new GenericResponseImpl({
             ...this,
             code,
         });
     }
+        */
 
     /**
      * Converts to plain object

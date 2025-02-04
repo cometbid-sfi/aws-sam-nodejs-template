@@ -59,29 +59,26 @@ export class AppResponseImpl<U extends ResponseData, T extends ApiParams<U>> imp
      * @returns
      */
     static createAppResponse<U extends ResponseData, T extends ApiParams<U>>(
-        requestMethod: RequestMethod = REQUEST_METHODS.GET,
+        params: ApiParams<U> = {},
         code: ResponseCode,
-        message?: string,
-        detailMessage?: string,
-        data?: U,
     ): AppResponse<T> {
         switch (code) {
             case ResponseCode.RESOURCE_READ_SUCCESS_CODE:
-                const readResponse = ApiMessage.read<U>(data);
+                const readResponse = ApiMessage.read<U>(params);
 
                 // Read success response
                 return AppResponseImpl.success<U, ApiMessage<U>>({
                     response: readResponse,
                 }) as AppResponse<T>;
             case ResponseCode.RESOURCE_CREATED_CODE:
-                const createdResponse = ApiMessage.created<U>(data);
+                const createdResponse = ApiMessage.created<U>(params);
 
                 // Create success response
                 return AppResponseImpl.success<U, ApiMessage<U>>({
                     response: createdResponse,
                 }) as AppResponse<T>;
             case ResponseCode.RESOURCE_UPDATED_CODE:
-                const updatedResponse = ApiMessage.updated<U>(data);
+                const updatedResponse = ApiMessage.updated<U>(params);
 
                 // Update success response
                 return AppResponseImpl.success<U, ApiMessage<U>>({
@@ -95,25 +92,25 @@ export class AppResponseImpl<U extends ResponseData, T extends ApiParams<U>> imp
                     response: deletedResponse,
                 }) as AppResponse<T>;
             case ResponseCode.BAD_REQUEST_ERR_CODE:
-                const badReqResponse = ApiError.badRequest<U>(requestMethod, message, detailMessage, data);
+                const badReqResponse = ApiError.badRequest<U>(params);
 
-                console.log(`Bad Request detail Message: ${badReqResponse.detailMessage}`);
-                console.log(`Bad Request Message: ${badReqResponse.message}`);
-                console.log(`Bad Request detail errors: ${badReqResponse.errors}`);
-                console.log(`Bad Request status code: ${badReqResponse.statusCode}`);
+                //console.log(`Bad Request detail Message: ${badReqResponse.detailMessage}`);
+                //console.log(`Bad Request Message: ${badReqResponse.message}`);
+                //console.log(`Bad Request detail errors: ${badReqResponse.errors}`);
+                //console.log(`Bad Request status code: ${badReqResponse.statusCode}`);
 
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({
                     response: badReqResponse,
                 }) as AppResponse<T>;
             case ResponseCode.UNAUTHORIZED_ACCESS_ERR_CODE:
-                const unauthorizedResponse = ApiError.unauthorized<U>(requestMethod, message, detailMessage, data);
+                const unauthorizedResponse = ApiError.unauthorized<U>(params);
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({
                     response: unauthorizedResponse,
                 }) as AppResponse<T>;
             case ResponseCode.CONFLICT_ERR_CODE:
-                const conflictResponse = ApiError.conflict<U>(requestMethod, message, detailMessage, data);
+                const conflictResponse = ApiError.conflict<U>(params);
 
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({
@@ -122,7 +119,7 @@ export class AppResponseImpl<U extends ResponseData, T extends ApiParams<U>> imp
             case ResponseCode.EMP_NOT_FOUND_ERR_CODE:
             case ResponseCode.USER_NOT_FOUND_ERR_CODE:
             case ResponseCode.ACCOUNT_NOT_FOUND_ERR_CODE:
-                const notfoundResponse = ApiError.notFound<U>(requestMethod, message, detailMessage, data);
+                const notfoundResponse = ApiError.notFound<U>(params);
 
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({
@@ -131,19 +128,14 @@ export class AppResponseImpl<U extends ResponseData, T extends ApiParams<U>> imp
             case ResponseCode.APP_SERVER_ERR_CODE:
             case ResponseCode.INTERNAL_SERVER_ERR_CODE:
             case ResponseCode.UNAVAILABLE_SERVICE_ERR_CODE:
-                const internalServerErrorResponse = ApiError.internalServerError<U>(
-                    requestMethod,
-                    message,
-                    detailMessage,
-                    data,
-                );
+                const internalServerErrorResponse = ApiError.internalServerError<U>(params);
 
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({
                     response: internalServerErrorResponse,
                 }) as AppResponse<T>;
             default:
-                const serverErrorResponse = ApiError.readError<U>(requestMethod, message, detailMessage, data);
+                const serverErrorResponse = ApiError.readError<U>(params);
 
                 // Error response
                 return AppResponseImpl.error<U, ApiError<U>>({

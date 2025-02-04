@@ -14,8 +14,8 @@ describe('ApiMessage', () => {
         });
 
         it('should create instance with provided values', () => {
-            const testData = { id: 1, type: 'MOVIE' };
-            const message = new ApiMessage({
+            const testData = { id: '1', type: 'MOVIE' };
+            const response = new ApiMessage({
                 statusCode: 201,
                 message: 'Test message',
                 detailMessage: 'Test detail',
@@ -23,63 +23,73 @@ describe('ApiMessage', () => {
                 requestMethod: REQUEST_METHODS.POST,
             });
 
-            expect(message.statusCode).toBe(201);
-            expect(message.message).toBe('Test message');
-            expect(message.detailMessage).toBe('Test detail');
-            expect(message.data).toEqual(testData);
-            expect(message.requestMethod).toBe(REQUEST_METHODS.POST);
+            expect(response.statusCode).toBe(201);
+            expect(response.message).toBe('Test message');
+            expect(response.detailMessage).toBe('Test detail');
+            expect(response.data).toEqual(testData);
+            expect(response.requestMethod).toBe(REQUEST_METHODS.POST);
         });
     });
 
     describe('static factory methods', () => {
         it('should create read message', () => {
-            const testData = { id: 1, type: 'MOVIE' };
-            const message = ApiMessage.read(testData);
+            const testData = { id: '1', type: 'MOVIE' };
+            const params = {
+                data: testData,
+            };
+            const response = ApiMessage.read(params);
 
-            expect(message.statusCode).toBe(200);
-            expect(message.message).toBe(DEFAULT_MESSAGES.SUCCESS);
-            expect(message.detailMessage).toBe(DEFAULT_DETAILS.SUCCESS);
-            expect(message.requestMethod).toBe(REQUEST_METHODS.GET);
-            expect(message.data).toEqual(testData);
+            expect(response.statusCode).toBe(200);
+            expect(response.message).toBe(DEFAULT_MESSAGES.SUCCESS);
+            expect(response.detailMessage).toBe(DEFAULT_DETAILS.SUCCESS);
+            expect(response.requestMethod).toBe(REQUEST_METHODS.GET);
+            expect(response.data).toEqual(testData);
         });
 
         it('should create created message', () => {
-            const testData = { id: 1, type: 'MOVIE' };
-            const message = ApiMessage.created(testData);
+            const testData = { id: '1', type: 'MOVIE' };
+            const params = {
+                data: testData,
+            };
 
-            expect(message.statusCode).toBe(201);
-            expect(message.message).toBe(DEFAULT_MESSAGES.CREATED);
-            expect(message.detailMessage).toBe(DEFAULT_DETAILS.CREATED);
-            expect(message.requestMethod).toBe(REQUEST_METHODS.POST);
-            expect(message.data).toEqual(testData);
+            const response = ApiMessage.created(params);
+
+            expect(response.statusCode).toBe(201);
+            expect(response.message).toBe(DEFAULT_MESSAGES.CREATED);
+            expect(response.detailMessage).toBe(DEFAULT_DETAILS.CREATED);
+            expect(response.requestMethod).toBe(REQUEST_METHODS.POST);
+            expect(response.data).toEqual(testData);
         });
 
         it('should create updated message', () => {
-            const testData = { id: 1, type: 'MOVIE' };
-            const message = ApiMessage.updated(testData);
+            const testData = { id: '1', type: 'MOVIE' };
+            const params = {
+                data: testData,
+            };
+            const response = ApiMessage.updated(params);
 
-            expect(message.statusCode).toBe(200);
-            expect(message.message).toBe(DEFAULT_MESSAGES.UPDATED);
-            expect(message.detailMessage).toBe(DEFAULT_DETAILS.UPDATED);
-            expect(message.requestMethod).toBe(REQUEST_METHODS.PUT);
-            expect(message.data).toEqual(testData);
+            expect(response.statusCode).toBe(200);
+            expect(response.message).toBe(DEFAULT_MESSAGES.UPDATED);
+            expect(response.detailMessage).toBe(DEFAULT_DETAILS.UPDATED);
+            expect(response.requestMethod).toBe(REQUEST_METHODS.PUT);
+            expect(response.data).toEqual(testData);
         });
 
         it('should create deleted message', () => {
-            const message = ApiMessage.deleted();
+            const response = ApiMessage.deleted();
 
-            expect(message.statusCode).toBe(204);
-            expect(message.message).toBe(DEFAULT_MESSAGES.DELETED);
-            expect(message.detailMessage).toBe(DEFAULT_DETAILS.DELETED);
-            expect(message.requestMethod).toBe(REQUEST_METHODS.DELETE);
-            expect(message.data).toBeUndefined();
+            expect(response.statusCode).toBe(204);
+            expect(response.message).toBe(DEFAULT_MESSAGES.DELETED);
+            expect(response.detailMessage).toBe(DEFAULT_DETAILS.DELETED);
+            expect(response.requestMethod).toBe(REQUEST_METHODS.DELETE);
+            expect(response.data).toBeUndefined();
         });
     });
 
     describe('isApiMessage type guard', () => {
         it('should return true for ApiMessage instances', () => {
-            const message = new ApiMessage();
-            expect(isApiMessage(message)).toBe(true);
+            const response = new ApiMessage();
+            expect(isApiMessage(response)).toBe(true);
         });
 
         it('should return false for non-ApiMessage values', () => {
